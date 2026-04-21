@@ -4,11 +4,13 @@ import json
 import os
 import re
 from datetime import datetime
+# Error হ্যান্ডেল করার জন্য try-except ব্যবহার করা হয়েছে
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 try:
     from telegram import CopyTextButton
 except ImportError:
-    CopyTextButton = None # ভার্সন পুরনো হলেও এখন আর বোট অফ হবে না
+    CopyTextButton = None
+
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -832,23 +834,23 @@ async def show_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     keyboard = []
     for entry in entries:
-    if CopyTextButton:
-        # লাইব্রেরি আপডেট থাকলে কপি বাটন কাজ করবে
-        keyboard.append([
-            InlineKeyboardButton(
-                text=f"📱 {entry['number']}",
-                copy_text=CopyTextButton(text=entry["number"])
-            )
-        ])
-    else:
-        # লাইব্রেরি পুরনো হলে সাধারণ বাটন হিসেবে দেখাবে (বোট অফ হবে না)
-        keyboard.append([InlineKeyboardButton(text=f"📱 {entry['number']}", callback_data="noop")])
+        if CopyTextButton:
+            # যদি লাইব্রেরি আপডেট থাকে তবে এটি অটো-কপি কাজ করবে
+            keyboard.append([
+                InlineKeyboardButton(
+                    text=f"📱 {entry['number']}",
+                    copy_text=CopyTextButton(text=entry["number"])
+                )
+            ])
+        else:
+            # লাইব্রেরি পুরনো হলে সাধারণ বাটন হিসেবে দেখাবে যাতে বোট অফ না হয়
+            keyboard.append([InlineKeyboardButton(text=f"📱 {entry['number']}", callback_data="noop")])
+            
+    keyboard.append([
         InlineKeyboardButton("🔁 Change Number", callback_data=f"country::{platform_idx}::{country_idx}"),
         InlineKeyboardButton("📲 OTP Group", url="https://t.me/fb_otpgroup")
     ])
     keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data=f"platform::{platform_idx}")])
-
-    numbers_text = "\n".join([f"✅ *Number {i}:* `{e['number']}`" for i, e in enumerate(entries, 1)])
 
     await q.edit_message_text(
         f"🌍 {country} ({platform})\n"
