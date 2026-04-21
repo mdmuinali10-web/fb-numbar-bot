@@ -4,7 +4,11 @@ import json
 import os
 import re
 from datetime import datetime
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, CopyTextButton
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
+try:
+    from telegram import CopyTextButton
+except ImportError:
+    CopyTextButton = None # ভার্সন পুরনো হলেও এখন আর বোট অফ হবে না
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -828,13 +832,17 @@ async def show_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     keyboard = []
     for entry in entries:
+    if CopyTextButton:
+        # লাইব্রেরি আপডেট থাকলে কপি বাটন কাজ করবে
         keyboard.append([
             InlineKeyboardButton(
                 text=f"📱 {entry['number']}",
                 copy_text=CopyTextButton(text=entry["number"])
             )
         ])
-    keyboard.append([
+    else:
+        # লাইব্রেরি পুরনো হলে সাধারণ বাটন হিসেবে দেখাবে (বোট অফ হবে না)
+        keyboard.append([InlineKeyboardButton(text=f"📱 {entry['number']}", callback_data="noop")])
         InlineKeyboardButton("🔁 Change Number", callback_data=f"country::{platform_idx}::{country_idx}"),
         InlineKeyboardButton("📲 OTP Group", url="https://t.me/fb_otpgroup")
     ])
